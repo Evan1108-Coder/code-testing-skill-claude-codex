@@ -4,6 +4,96 @@ description: "Use this skill when testing is needed — writing tests, running t
 
 # Intelligent Test Generation & Execution
 
+## Core Principle: Handle Real-World Chaos
+
+Real projects are messy. You will encounter projects that are NOT clean, NOT well-structured, and NOT set up properly. This skill MUST adapt to chaos gracefully. Never assume a project has:
+- A working test setup
+- Any existing tests at all
+- A single consistent framework
+- Proper configuration files
+- Clean dependency management
+- Consistent code style
+- Up-to-date documentation
+
+### Chaos Scenarios and How to Handle Them
+
+**No test infrastructure exists at all:**
+- No test framework installed, no test config, no test files anywhere
+- Action: Pick the best framework for the project's language/ecosystem and set it up from scratch
+- For JS/TS: Install Vitest (modern, fast, ESM-native) or Jest (if the project uses CJS/older tooling)
+- For Python: `pip install pytest` — it works out of the box with zero config
+- For Go: Built-in — no setup needed, just write `_test.go` files
+- For Rust: Built-in — just add `#[cfg(test)]` modules
+- Create a minimal config file. Don't over-configure — use sensible defaults
+- Create the first test file as a template the user can follow
+
+**Multiple conflicting test frameworks:**
+- Project has both Jest AND Vitest configs, or Mocha AND Jest, or pytest AND unittest
+- Action: Check which one CI actually runs (read `.github/workflows/`). Check which has more recent test files. Check `package.json` scripts. Use whichever is actively maintained. If truly ambiguous, ask the user.
+
+**Test config exists but is broken:**
+- Config references files that don't exist, uses deprecated options, has invalid syntax
+- Action: Fix the config. Don't just report it — repair it so tests can actually run. Common fixes:
+  - `transform` pointing to missing babel config → update to current preset
+  - `testEnvironment` set to `jsdom` but `jsdom` not installed → install it or switch to `node` if no DOM needed
+  - `moduleNameMapper` with stale path aliases → update to match current `tsconfig.json` paths
+  - Python `conftest.py` importing deleted fixtures → remove stale imports
+
+**Dependencies are missing or broken:**
+- `node_modules` doesn't exist, `package-lock.json` is stale, virtual env is missing
+- Action: Run the package manager first. `npm install`, `pip install -r requirements.txt`, `go mod download`. If the lockfile is stale and install fails, try deleting the lockfile and reinstalling (warn the user first).
+
+**Mixed language project:**
+- Frontend in TypeScript, backend in Python, scripts in Bash, infrastructure in Go
+- Action: Each language component gets tested with its native framework. Don't try to unify them. Write separate test commands for each. Example:
+  - `npm test` for the frontend
+  - `pytest` for the backend
+  - `go test ./...` for the infra tooling
+  - Document which command tests what
+
+**Legacy code with no types, no docs, no structure:**
+- Global variables everywhere, 2000-line files, no clear module boundaries, callback hell
+- Action: Don't try to refactor first. Test the code AS IT IS. Strategies:
+  - Test at the highest level possible (integration/E2E) to verify behavior without understanding internals
+  - For functions with side effects everywhere, capture the side effects: mock the external calls, verify they were called correctly
+  - For deeply nested callbacks, test the outermost function and assert on final output
+  - Accept that some legacy code is untestable without refactoring — note this in your report and suggest which refactoring would unlock testability
+
+**Monorepo with inconsistent setup:**
+- Some packages have tests, some don't. Different frameworks in different packages. Shared dependencies at root level.
+- Action: Treat each package independently. Check each package's own `package.json`/config. Don't assume root-level config applies everywhere. Look for workspace configuration (`workspaces` in package.json, `pnpm-workspace.yaml`, `lerna.json`).
+
+**Tests exist but haven't been run in months:**
+- Tests reference old APIs, import deleted modules, use deprecated assertion methods
+- Action: Run them first to see what breaks. Fix broken imports. Update deprecated APIs. Delete tests for code that no longer exists. This cleanup IS part of the testing process.
+
+**No clear entry point or build step:**
+- Can't figure out how to even run the project, let alone test it
+- Action: Look for clues in order: README, Makefile, Dockerfile, CI config, package.json scripts, `main` files. If TypeScript, check if it needs compilation first (`tsc` or `tsx`). If the project uses a bundler, tests might need the same config (Webpack aliases, Vite resolve, etc.).
+
+**Environment-dependent code with no local setup:**
+- Code requires AWS credentials, database connections, API keys, or specific services running
+- Action: For unit tests, mock ALL external services. For integration tests, check for Docker Compose files or local dev setup. If none exists, create test doubles and document what's needed for full integration testing.
+
+**Partial or inconsistent test coverage:**
+- Some modules have 95% coverage, others have 0%. Test quality varies wildly — some tests are excellent, others just check that functions don't throw.
+- Action: Don't try to make everything uniform at once. Focus on the gaps in critical code first. Match the quality level of the BEST existing tests, not the worst. Note the inconsistency in your report.
+
+### Adaptive Decision Making
+
+When you encounter chaos, follow this decision tree:
+
+1. **Can I run existing tests?** → Try running them. If they pass, build on that foundation.
+2. **Do existing tests fail?** → Fix them first (broken tests are worse than no tests).
+3. **Is there a framework installed but not configured?** → Configure it minimally.
+4. **Is there NO framework at all?** → Install one appropriate for the language.
+5. **Is the code testable as-is?** → If yes, write tests. If no, identify the minimum refactoring needed and propose it to the user.
+6. **Is the project structure unclear?** → Read entry points, build configs, CI files to understand the architecture before testing.
+
+Always bias toward action: get SOMETHING working and tested rather than planning the perfect test infrastructure.
+
+---
+
 Two modes of operation based on user intent:
 
 ## Mode 1: "Test This" (Targeted)
@@ -28,9 +118,9 @@ Identify what changed or what needs testing. Do ALL of the following:
 - **Note boundary values** — For numeric inputs: 0, -1, MAX_INT, NaN. For strings: empty string, very long string, strings with special characters (unicode, newlines, null bytes). For arrays: empty, single element, very large.
 - **Check for side effects** — Does the function write to disk? Make network calls? Modify global state? Send events? Log messages? These are things you need to verify in tests.
 
-### Step 2: Detect Test Infrastructure
+### Step 2: Detect Test Infrastructure (or Create It)
 
-Before writing a single line of test code, understand the existing test setup completely:
+Before writing a single line of test code, understand the existing test setup — or build one if it doesn't exist:
 
 - **Find existing test files** — Search for ALL of these patterns:
   - `*.test.ts`, `*.test.js`, `*.test.tsx`, `*.test.jsx`
@@ -66,6 +156,19 @@ Before writing a single line of test code, understand the existing test setup co
   - `package.json` scripts: `"test"`, `"test:unit"`, `"test:integration"`, `"test:watch"`
   - `Makefile` targets
   - CI config (`.github/workflows/*.yml`) — what test commands does CI run?
+
+**IF NONE OF THE ABOVE EXISTS** — You need to bootstrap test infrastructure:
+- For JS/TS projects: `npm install -D vitest` (or `jest` if the project is CommonJS-heavy), create a minimal `vitest.config.ts`:
+  ```typescript
+  import { defineConfig } from 'vitest/config'
+  export default defineConfig({ test: { globals: true } })
+  ```
+- For Python: `pip install pytest`, no config file needed for basic usage
+- For Go: Nothing to install — just create `*_test.go` files
+- For Rust: Nothing to install — add `#[cfg(test)]` modules
+- Add a `"test"` script to package.json: `"test": "vitest run"`
+- Create a `tests/` directory (or match however the project organizes its source: `src/` → `src/__tests__/` or co-located `*.test.*`)
+- Tell the user what you set up so they can adjust if needed
 
 ### Step 3: Generate Test Plan
 
@@ -161,6 +264,11 @@ After writing tests, execute them and fix issues:
    - Is it a test bug? (wrong mock setup, wrong expected value, wrong import path) → Fix the test
    - Is it an actual code bug? (the function genuinely doesn't handle this case) → Report it clearly: "BUG FOUND: functionName in file.ts does not handle X case. Expected: Y. Actual: Z."
    - Is it an environment issue? (missing dependency, wrong Node version, permission error) → Report it and suggest a fix
+   - Is it an infrastructure issue? (test runner can't resolve paths, TypeScript compilation fails, module format mismatch ESM/CJS) → Fix the config. Common fixes:
+     - ESM/CJS mismatch: add `"type": "module"` to package.json or configure transform in test config
+     - Path alias failures: add `resolve.alias` to vitest config matching `tsconfig.json` paths
+     - Missing types: `npm install -D @types/node @types/jest` etc.
+     - Permission denied: check file permissions, avoid testing in read-only directories
 3. **Run the FULL test suite** — After your tests pass in isolation:
    - This catches regressions — did you break something else?
    - This catches shared state issues — does your test interfere with existing tests?
