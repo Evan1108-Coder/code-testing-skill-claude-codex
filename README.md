@@ -1,4 +1,22 @@
-# TestPilot
+# Code Testing Skill for Claude Code and Codex
+
+> Status: beta. This is a prompt/skill package, not a test framework. It improves how AI agents approach testing inside your existing project.
+
+Also called **TestPilot** in examples and prompts.
+
+## Why Use This Skill?
+
+- Pushes Claude Code and Codex to inspect the project before writing tests.
+- Separates targeted testing from full-project audits.
+- Encourages running tests and reporting real failures instead of inventing confidence.
+- Covers UI, logic, integration, regression, and edge-case review.
+
+## Current Limitations
+
+- It cannot replace project-specific test infrastructure.
+- It works best when the repo already has runnable commands or clear setup docs.
+- Agent output still needs review for risky changes or weak assertions.
+
 
 A testing skill for **Claude Code** and **Codex** that teaches your AI coding agent to write, run, and audit tests intelligently — not just blindly generate them.
 
