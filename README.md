@@ -20,6 +20,12 @@ Also called **TestPilot** in examples and prompts.
 
 A testing skill for **Claude Code** and **Codex** that teaches your AI coding agent to write, run, and audit tests intelligently — not just blindly generate them.
 
+## How It Works
+
+![Workflow](docs/images/workflow.jpg)
+
+*TestPilot scans your project, detects test frameworks, writes meaningful tests, runs them, and reports real results.*
+
 ## What It Is
 
 TestPilot is a skill file (a markdown instruction set) you drop into your Claude Code or Codex project. Once installed, your AI agent gains structured expertise in test generation, framework detection, and coverage analysis. Instead of writing generic, shallow tests, it produces meaningful tests that catch real bugs — while spotting issues in your UI, code, features, and logic.
