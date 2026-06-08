@@ -14,6 +14,15 @@
 
 ---
 
+
+## Real Visual Snapshot
+
+These visuals are generated from the actual repository structure and project workflow, not placeholders.
+
+![Repository file mix](docs/assets/repo-file-mix.svg)
+
+![Project workflow](docs/assets/workflow.svg)
+
 > Status: beta. This is a prompt/skill package, not a test framework. It improves how AI agents approach testing inside your existing project.
 
 Also called **TestPilot** in examples and prompts.
