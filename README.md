@@ -2,13 +2,13 @@
 
 > Claude/Codex testing skill for planning, writing, running, and auditing meaningful tests inside real projects.
 
-![Status](https://img.shields.io/badge/status-beta-6b7280) ![License](https://img.shields.io/github/license/Evan1108-Coder/Code-Testing-Skill-Claude-Codex) ![CI](https://img.shields.io/github/actions/workflow/status/Evan1108-Coder/Code-Testing-Skill-Claude-Codex/ci.yml?branch=main&label=CI)
+![Status](https://img.shields.io/badge/status-beta-6b7280) ![License](https://img.shields.io/github/license/Evan1108-Coder/Code-Testing-Skill-Claude-Codex)
 
 **AI testing skill • targeted tests • full audit mode • real validation**
 
 ## At a Glance
 
-- Real project documentation now includes security, contribution, changelog, CI, and issue/PR workflows.
+- Real project documentation now includes security guidance, contribution notes, issue/PR templates, and real visual snapshots.
 - Maintenance snapshot: see [docs/project-snapshot.md](docs/project-snapshot.md) for a generated file-mix chart and repository checklist.
 - Public repo: https://github.com/Evan1108-Coder/Code-Testing-Skill-Claude-Codex
 
