@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required files
+        run: |
+          test -f README.md
+          test -f LICENSE
+          test -f SECURITY.md
+          test -f CONTRIBUTING.md
+          test -f skill/SKILL.md
+          test -f docs/INSTALL.md
+          test -f docs/USAGE.md
+
+      - name: Check Markdown is non-empty
+        run: |
+          for file in README.md SECURITY.md CONTRIBUTING.md skill/SKILL.md docs/INSTALL.md docs/USAGE.md; do
+            test -s "$file"
+          done
